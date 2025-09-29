@@ -23,7 +23,9 @@ class PlaneWatcher:
         self.client: AirplanesClient = AirplanesClient()
         self.aircraft: List[AircraftResp] = []
         self.__aircraft_types: AircraftTypes = AircraftTypes()
-        self.__interesting_hexes: List = AlertList().interesting_hexes
+        self.interestingData:AlertList = AlertList()
+        self.__interesting_hexes: List = self.interestingData.interesting_hexes
+        
         self.__lat: float = lat
         self.__lon: float = lon
         self.__rad: int = rad
@@ -107,6 +109,10 @@ class PlaneWatcher:
 
     def is_interesting(self, hex:str) -> bool:
         return hex.lower() in self.__interesting_hexes
+    
+    def get_interesting(self, hex:str):
+        return [x for x in self.interestingData.interesting_aircraft if x['$ICAO'].lower() == hex.lower()][0]
+
 
 if __name__ == "__main__":
     watcher = PlaneWatcher(42.5197568, -71.417856, 10)

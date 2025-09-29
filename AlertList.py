@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Any
 import csv
 
 class AlertList:
@@ -10,7 +10,7 @@ class AlertList:
             
 
     def __init__(self):
-        self.interesting_aircraft: List = []
+        self.interesting_aircraft: List[dict[str,Any]] = [{}]
         self.load()
         self.interesting_hexes: List[str] = [item['$ICAO'].lower() for item in self.interesting_aircraft]
 
