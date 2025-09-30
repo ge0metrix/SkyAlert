@@ -5,8 +5,12 @@ from textual.widgets import Button, Digits, Footer, Header, DataTable
 from PlaneWatcher import PlaneWatcher
 
 from datetime import datetime
-
+import click
 class PlaneWatcherApp(App):
+    def __init__(self, lat, lon, range, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.watcher = PlaneWatcher(lat, lon, range)
+
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
         seentable = DataTable(id='seen_table')
@@ -20,7 +24,6 @@ class PlaneWatcherApp(App):
         seentable = self.get_widget_by_id('seen_table', expect_type=DataTable)
         columns = ["Hex", "Type", "Reg", "Flight", "Closest (nm)", "First Seen", "Last Seen", "Helicopter?", "Interesting?", "Interesting Desc"]
         seentable.add_columns(*columns)
-        self.watcher = PlaneWatcher(42.5197568, -71.417856, 10)
         self.refresh_data()
         self.set_interval(10, self.refresh_data)
 
@@ -48,6 +51,16 @@ class PlaneWatcherApp(App):
 
         seentable.loading = False
 
-if __name__ == "__main__":
-    app = PlaneWatcherApp()
+
+
+@click.command()
+@click.option('--lat', type=float, required=True, help='Latitude of the location to monitor')
+@click.option('--lon', type=float, required=True, help='Longitude of the location to monitor')
+@click.option('--range', type=int, default=5, help='Range in nautical miles to monitor (default: 5)')
+def main(lat: float, lon: float, range: int) -> None:
+    app = PlaneWatcherApp(lat=lat, lon=lon, range=range)
     app.run()
+
+
+if __name__ == "__main__":
+    main()
