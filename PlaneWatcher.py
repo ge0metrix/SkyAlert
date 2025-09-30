@@ -26,17 +26,17 @@ class PlaneWatcher:
         self.interestingData:AlertList = AlertList()
         self.__interesting_hexes: List = self.interestingData.interesting_hexes
         
-        self.__lat: float = lat
-        self.__lon: float = lon
-        self.__rad: int = rad
-        self.__last_refresh: datetime = datetime.now()
+        self.lat: float = lat
+        self.lon: float = lon
+        self.radius: int = rad
+        self.last_refresh: datetime = datetime.now()
         self.seen: dict[str, SeenAircraft] = {}
 
     def refresh(self):
-        self.__last_refresh = datetime.now()
+        self.last_refresh = datetime.now()
         logger.info("Fetching nearby aircraft...")
         data: List[dict] | None = self.client.get_point(
-            self.__lat, self.__lon, self.__rad
+            self.lat, self.lon, self.radius
         )
         if not data:
             self.aircraft = []
@@ -46,7 +46,7 @@ class PlaneWatcher:
 
     def update_seen(self) -> None:
         for ac in self.aircraft:
-            dist = ac.distance_to(lat=self.__lat, lon=self.__lon, unit="nm")
+            dist = ac.distance_to(lat=self.lat, lon=self.lon, unit="nm")
 
             if not dist:
                 dist = float("inf")
@@ -58,8 +58,8 @@ class PlaneWatcher:
                 tail=ac.r,
                 flight=ac.flight,
                 closestApproach=dist,
-                firstSeen=self.__last_refresh,
-                lastSeen=self.__last_refresh,
+                firstSeen=self.last_refresh,
+                lastSeen=self.last_refresh,
                 is_helicopter=self.is_helicopter(ac.t),
                 is_interesting=self.is_interesting(ac.hex)
             )
@@ -67,13 +67,13 @@ class PlaneWatcher:
                 self.seen[ac.hex] = seenac
                 logger.info(f"New aircraft seen: {ac.hex} ({ac.flight})")
             else:
-                self.seen[ac.hex].lastSeen = self.__last_refresh
+                self.seen[ac.hex].lastSeen = self.last_refresh
                 if dist is not None:
                     if (
                         self.seen[ac.hex].closestApproach is None
                         or dist < self.seen[ac.hex].closestApproach
                     ):
-                        self.seen[ac.hex].closestTime = self.__last_refresh
+                        self.seen[ac.hex].closestTime = self.last_refresh
                         self.seen[ac.hex].closestApproach = dist
                         self.seen[ac.hex].flight = ac.flight
 
@@ -93,18 +93,18 @@ class PlaneWatcher:
             if ac.alt_baro != "ground" and self.is_helicopter(ac.t)
         ]
         for heli in helicopters:
-            dist = heli.distance_to(lat=self.__lat, lon=self.__lon, unit="nm")
+            dist = heli.distance_to(lat=self.lat, lon=self.lon, unit="nm")
             dist_str = "unknown" if dist is None else f"{dist:.2f} nm"
             print(
-                f"{self.__last_refresh}\t{heli.hex}\t{heli.flight}\t{heli.desc}\t{dist_str}"
+                f"{self.last_refresh}\t{heli.hex}\t{heli.flight}\t{heli.desc}\t{dist_str}"
             )
 
     def print_aircraft(self):
         for aircraft in self.aircraft:
-            dist = aircraft.distance_to(lat=self.__lat, lon=self.__lon, unit="nm")
+            dist = aircraft.distance_to(lat=self.lat, lon=self.lon, unit="nm")
             dist_str = "unknown" if dist is None else f"{dist:.2f} nm"
             print(
-                f"{self.__last_refresh}\t{aircraft.hex}\t{aircraft.flight}\t{aircraft.desc}\t{dist_str}"
+                f"{self.last_refresh}\t{aircraft.hex}\t{aircraft.flight}\t{aircraft.desc}\t{dist_str}"
             )
 
     def is_interesting(self, hex:str) -> bool:

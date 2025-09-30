@@ -14,23 +14,33 @@ class PlaneWatcherApp(App):
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
+        currenttable = DataTable(id='current_table')
+        currenttable.cursor_type = "none"
+        currenttable.zebra_stripes = True
+
         seentable = DataTable(id='seen_table')
         seentable.cursor_type = "none"
         seentable.zebra_stripes = True
         seentable.loading = True
-        yield VerticalScroll(seentable)
+        
+        yield VerticalScroll(currenttable, seentable)
 
 
     def on_mount(self) -> None:
+        
         seentable = self.get_widget_by_id('seen_table', expect_type=DataTable)
         columns = ["Hex", "Type", "Reg", "Flight", "Closest (nm)", "First Seen", "Last Seen", "Helicopter?", "Interesting?", "Interesting Desc"]
         seentable.add_columns(*columns)
+
+        currenttable = self.get_widget_by_id('current_table', expect_type=DataTable)
+        columns = ["Hex", "Type", "Reg", "Flight", "Closest (nm)", "First Seen", "Last Seen", "Helicopter?", "Interesting?", "Interesting Desc"]
+        currenttable.add_columns(*columns)
+        
         self.refresh_data()
         self.set_interval(10, self.refresh_data)
 
 
-    def refresh_data(self) -> None:
-        self.watcher.refresh()
+    def update_seen(self) -> None:
         seentable = self.get_widget_by_id('seen_table', expect_type=DataTable)
         seentable.clear()
         seentable.loading = True
@@ -51,6 +61,26 @@ class PlaneWatcherApp(App):
             seentable.add_row(f'[{color}]{ac.hex}[/{color}]', f'[{color}]{ac.type}[/{color}]', f'[{color}]{ac.tail}[/{color}]', f'[{color}]{ac.flight}[/{color}]', f'[{color}]{closest}[/{color}]', f'[{color}]{first_seen}[/{color}]', f'[{color}]{last_seen}[/{color}]', f'[{color}]{ac.is_helicopter}[/{color}]', f'[{color}]{ac.is_interesting}[/{color}]', f'[{color}]{interestingdesc.get("$Operator")}[/{color}]', key=ac.hex)
 
         seentable.loading = False
+
+    def update_current(self) -> None:
+        currenttable = self.get_widget_by_id('current_table', expect_type=DataTable)
+        currenttable.clear()
+        currenttable.loading = True
+        for ac in self.watcher.aircraft:
+            closest = f""
+            first_seen = ""
+            last_seen = ""
+            color: str = "white"
+            interestingdesc = self.watcher.get_interesting(ac.hex)
+            dist = ac.distance_to(lat=self.watcher.lat, lon=self.watcher.lon, unit="nm")
+            currenttable.add_row(f'[{color}]{ac.hex}[/{color}]', f'[{color}]{ac.t}[/{color}]', f'[{color}]{ac.r}[/{color}]', f'[{color}]{ac.flight}[/{color}]', f'[{color}]{dist}[/{color}]', f'[{color}]{first_seen}[/{color}]', f'[{color}]{last_seen}[/{color}]', f'[{color}]{None}[/{color}]', f'[{color}]{None}[/{color}]', f'[{color}]{interestingdesc.get("$Operator")}[/{color}]', key=ac.hex)
+
+        currenttable.loading = False
+
+    def refresh_data(self) -> None:
+        self.watcher.refresh()
+        self.update_seen()
+        self.update_current()
 
 
 
