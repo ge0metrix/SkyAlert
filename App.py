@@ -35,18 +35,18 @@ class PlaneWatcherApp(App):
             closest = f"{ac.closestApproach:.2f}" if ac.closestApproach is not None else "N/A"
             first_seen = ac.firstSeen.strftime("%Y-%m-%d %H:%M:%S")
             last_seen = ac.lastSeen.strftime("%Y-%m-%d %H:%M:%S")
+            color: str = "white"
+            interestingdesc = self.watcher.get_interesting(ac.hex)
             if ac.is_interesting and ac.is_helicopter:
-                interestingdesc = self.watcher.get_interesting(ac.hex)
-                seentable.add_row(f'[red on yellow]{ac.hex}[/red on yellow]', f'[red on yellow]{ac.type}[/red on yellow]', f'[red on yellow]{ac.tail}[/red on yellow]', f'[red on yellow]{ac.flight}[/red on yellow]', f'[red on yellow]{closest}[/red on yellow]', f'[red on yellow]{first_seen}[/red on yellow]', f'[red on yellow]{last_seen}[/red on yellow]', f'[red on yellow]{ac.is_helicopter}[/red on yellow]', f'[red on yellow]{ac.is_interesting}[/red on yellow]',f'[red on yellow]{interestingdesc}[/red on yellow]' , '', key=ac.hex)
-            elif ac.is_interesting:
-                interestingdesc = self.watcher.get_interesting(ac.hex)
-                seentable.add_row(f'[red]{ac.hex}[/red]', f'[red]{ac.type}[/red]', f'[red]{ac.tail}[/red]', f'[red]{ac.flight}[/red]', f'[red]{closest}[/red]', f'[red]{first_seen}[/red]', f'[red]{last_seen}[/red]', f'[red]{ac.is_helicopter}[/red]', f'[red]{ac.is_interesting}[/red]', f'[red]{interestingdesc}[/red]', key=ac.hex)
+                color = "red"
+            elif ac.is_interesting:\
+                color = "yellow"
             elif ac.is_helicopter:
-                seentable.add_row(f'[yellow]{ac.hex}[/yellow]', f'[yellow]{ac.type}[/yellow]', f'[yellow]{ac.tail}[/yellow]', f'[yellow]{ac.flight}[/yellow]', f'[yellow]{closest}[/yellow]', f'[yellow]{first_seen}[/yellow]', f'[yellow]{last_seen}[/yellow]', f'[yellow]{ac.is_helicopter}[/yellow]', f'[yellow]{ac.is_interesting}[/yellow]','', key=ac.hex)
-            else:
-                seentable.add_row(ac.hex, ac.type, ac.tail, ac.flight, closest, first_seen, last_seen, ac.is_helicopter, ac.is_interesting, key=ac.hex)
-        seentable.loading = False
+                color = "blue"
 
+            seentable.add_row(f'[{color}]{ac.hex}[/{color}]', f'[{color}]{ac.type}[/{color}]', f'[{color}]{ac.tail}[/{color}]', f'[{color}]{ac.flight}[/{color}]', f'[{color}]{closest}[/{color}]', f'[{color}]{first_seen}[/{color}]', f'[{color}]{last_seen}[/{color}]', f'[{color}]{ac.is_helicopter}[/{color}]', f'[{color}]{ac.is_interesting}[/{color}]', f'[{color}]{interestingdesc.get("$Operator")}[/{color}]', key=ac.hex)
+
+        seentable.loading = False
 
 if __name__ == "__main__":
     app = PlaneWatcherApp()
