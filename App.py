@@ -10,6 +10,7 @@ class PlaneWatcherApp(App):
     def __init__(self, lat, lon, range, **kwargs) -> None:
         super().__init__(**kwargs)
         self.watcher = PlaneWatcher(lat, lon, range)
+        self.title = f"Plane Watcher ({lat}, {lon}) Range: {range}nm"
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
