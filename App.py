@@ -7,6 +7,7 @@ from PlaneWatcher import PlaneWatcher
 from datetime import datetime
 import click
 class PlaneWatcherApp(App):
+    CSS_PATH = "skyalert.tss"
     def __init__(self, lat, lon, range, **kwargs) -> None:
         super().__init__(**kwargs)
         self.watcher = PlaneWatcher(lat, lon, range)
@@ -14,16 +15,17 @@ class PlaneWatcherApp(App):
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
-        currenttable = DataTable(id='current_table')
+        currenttable = DataTable(id='current_table', classes="current_table")
         currenttable.cursor_type = "none"
         currenttable.zebra_stripes = True
 
-        seentable = DataTable(id='seen_table')
+        seentable = DataTable(id='seen_table', classes="seen_table")
         seentable.cursor_type = "none"
         seentable.zebra_stripes = True
         seentable.loading = True
         
-        yield VerticalScroll(currenttable, seentable)
+        yield currenttable
+        yield seentable
 
 
     def on_mount(self) -> None:
@@ -37,7 +39,7 @@ class PlaneWatcherApp(App):
         currenttable.add_columns(*columns)
         
         self.refresh_data()
-        self.set_interval(10, self.refresh_data)
+        self.set_interval(5, self.refresh_data)
 
 
     def update_seen(self) -> None:

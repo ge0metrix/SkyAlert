@@ -7,3 +7,7 @@ useage:
 `uv run ./App.py --lat <latitude (float)> --lon <longitude (float)> --range <range in nm (int)>`
 
 
+TODO:
+[] Stop Refreshing entire tables
+[] New table of Interesting Aircraft
+[] 

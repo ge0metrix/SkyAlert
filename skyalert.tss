@@ -1,0 +1,11 @@
+Screen {
+    layout: vertical;
+}
+
+
+.current_table{
+    height: 25%;
+}
+.seen_table{
+    height: 75%;
+}
