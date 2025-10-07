@@ -9,5 +9,4 @@ useage:
 
 TODO:
 [] Stop Refreshing entire tables
-[] New table of Interesting Aircraft
-[] 
+[x] New table of Interesting Aircraft

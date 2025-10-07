@@ -110,7 +110,7 @@ class PlaneWatcher:
     def is_interesting(self, hex:str) -> bool:
         return hex.lower() in self.__interesting_hexes
     
-    def get_interesting(self, hex:str) -> dict[str,Any] | None:
+    def get_interesting(self, hex:str) -> dict[str,Any]:
         x =  [x for x in self.interestingData.interesting_aircraft if x['$ICAO'].lower() == hex.lower()]
         if len(x) > 0:
             return x[0]

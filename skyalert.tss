@@ -6,6 +6,9 @@ Screen {
 .current_table{
     height: 25%;
 }
+.interesting_table{
+    height: 25%;
+}
 .seen_table{
-    height: 75%;
+    height: 50%;
 }
