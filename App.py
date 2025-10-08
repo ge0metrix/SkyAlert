@@ -1,16 +1,17 @@
+from typing import List
 from textual.app import App, ComposeResult
 from textual.widgets import Footer, Header
 from textual.containers import HorizontalGroup, VerticalScroll
 from textual.widgets import Button, Digits, Footer, Header, DataTable
+
 from PlaneWatcher import PlaneWatcher
 from textual.widget import Widget
 
 from datetime import datetime
 import click
 
+from SeenAircraft import SeenAircraft
 
-class PlaneList(Widget):
-    ...
 
 
 class PlaneWatcherApp(App):
@@ -36,7 +37,6 @@ class PlaneWatcherApp(App):
         seentable = DataTable(id='seen_table', classes="seen_table")
         seentable.cursor_type = "none"
         seentable.zebra_stripes = True
-        seentable.loading = True
         
         yield currenttable
         yield interestingtable
@@ -44,84 +44,88 @@ class PlaneWatcherApp(App):
 
 
     def on_mount(self) -> None:
+        columns = [
+            ("Hex", "Hex"),
+            ("Type","Type"),
+            ("Reg", "Reg"),
+            ("Flight","Flight"),
+            ("Closest","Closest"),
+            ("First Seen","First Seen"),
+            ("Last Seen","Last Seen"),
+            ("Helicopter","Helicopter"),
+            ("Interesting","Interesting"),
+            ("Interesting Desc","Interesting Desc")
+            ]
         currenttable = self.get_widget_by_id('current_table', expect_type=DataTable)
-        columns = ["Hex", "Type", "Reg", "Flight", "Closest (nm)", "First Seen", "Last Seen", "Helicopter?", "Interesting?", "Interesting Desc"]
-        currenttable.add_columns(*columns)        
+        for label, key in columns:
+            currenttable.add_column(label=label, key=key)
+
         
         interestingtable = self.get_widget_by_id('interesting_table', expect_type=DataTable)
-        columns = ["Hex", "Type", "Reg", "Flight", "Closest (nm)", "First Seen", "Last Seen", "Helicopter?", "Interesting?", "Interesting Desc"]
-        interestingtable.add_columns(*columns)
+        for label, key in columns:
+            interestingtable.add_column(label=label, key=key)
 
         seentable = self.get_widget_by_id('seen_table', expect_type=DataTable)
-        columns = ["Hex", "Type", "Reg", "Flight", "Closest (nm)", "First Seen", "Last Seen", "Helicopter?", "Interesting?", "Interesting Desc"]
-        seentable.add_columns(*columns)
-
-        
-
-
+        for label, key in columns:
+            seentable.add_column(label=label, key=key)
         self.refresh_data()
         self.set_interval(5, self.refresh_data)
+
+    def update_aircraft_table(self, table: DataTable, data: list[SeenAircraft]) -> None:
+          self.log.info(f"{table.id}:\t Updating with {len(data)} entries")
+          table.clear()
+          for ac in data:
+            if(ac.hex.startswith("~")):
+                self.log.debug(f"{table.id}:\t Skipping invalid hex {ac.hex}")
+                continue
+            interestingdesc = self.watcher.get_interesting(ac.hex)
+            color = "white"
+            if ac.is_interesting and ac.is_helicopter:
+                color = "red"
+            elif ac.is_interesting:
+                color = "yellow"
+            elif ac.is_helicopter:
+                color = "blue"
+            self.log.debug(f"{table.id}:\t Adding row for {ac.hex} to table {table.id}")
+            rk = table.add_row(f'[{color}]{ac.hex.upper()}[/{color}]', f'[{color}]{ac.type}[/{color}]', f'[{color}]{ac.tail}[/{color}]', f'[{color}]{ac.flight}[/{color}]', f'[{color}]{ac.closestApproach}[/{color}]', f'[{color}]{ac.firstSeen}[/{color}]', f'[{color}]{ac.lastSeen}[/{color}]', f'[{color}]{ac.is_helicopter}[/{color}]', f'[{color}]{ac.is_interesting}[/{color}]', f'[{color}]{interestingdesc.get("$Operator")}[/{color}]', key=ac.hex)
+            self.log.debug(f"{table.id}:\t {rk.value}")
 
 
     def update_seen(self) -> None:
         seentable = self.get_widget_by_id('seen_table', expect_type=DataTable)
-        seentable.clear()
-        seentable.loading = True
         sortedac = sorted(self.watcher.seen.values(), key=lambda ac: (ac.lastSeen, -ac.closestApproach), reverse=True)
-        for ac in sortedac:
-            closest = f"{ac.closestApproach:.2f}" if ac.closestApproach is not None else "N/A"
-            first_seen = ac.firstSeen.strftime("%Y-%m-%d %H:%M:%S")
-            last_seen = ac.lastSeen.strftime("%Y-%m-%d %H:%M:%S")
-            color: str = "white"
-            interestingdesc = self.watcher.get_interesting(ac.hex)
-            if ac.is_interesting and ac.is_helicopter:
-                color = "red"
-            elif ac.is_interesting:
-                color = "yellow"
-            elif ac.is_helicopter:
-                color = "blue"
+        self.update_aircraft_table(seentable, sortedac)
 
-            seentable.add_row(f'[{color}]{ac.hex}[/{color}]', f'[{color}]{ac.type}[/{color}]', f'[{color}]{ac.tail}[/{color}]', f'[{color}]{ac.flight}[/{color}]', f'[{color}]{closest}[/{color}]', f'[{color}]{first_seen}[/{color}]', f'[{color}]{last_seen}[/{color}]', f'[{color}]{ac.is_helicopter}[/{color}]', f'[{color}]{ac.is_interesting}[/{color}]', f'[{color}]{interestingdesc.get("$Operator")}[/{color}]', key=ac.hex)
-
-        seentable.loading = False
-
-    def update_current(self) -> None:
-        currenttable = self.get_widget_by_id('current_table', expect_type=DataTable)
-        currenttable.clear()
-        currenttable.loading = True
-        for ac in self.watcher.aircraft:
-            closest = f""
-            first_seen = ""
-            last_seen = ""
-            color: str = "white"
-            interestingdesc = self.watcher.get_interesting(ac.hex)
-            dist = ac.distance_to(lat=self.watcher.lat, lon=self.watcher.lon, unit="nm")
-            currenttable.add_row(f'[{color}]{ac.hex}[/{color}]', f'[{color}]{ac.t}[/{color}]', f'[{color}]{ac.r}[/{color}]', f'[{color}]{ac.flight}[/{color}]', f'[{color}]{dist}[/{color}]', f'[{color}]{first_seen}[/{color}]', f'[{color}]{last_seen}[/{color}]', f'[{color}]{None}[/{color}]', f'[{color}]{None}[/{color}]', f'[{color}]{interestingdesc.get("$Operator")}[/{color}]', key=ac.hex)
-
-        currenttable.loading = False
 
     def update_interesting(self) -> None:
         interestingtable = self.get_widget_by_id('interesting_table', expect_type=DataTable)
-        interestingtable.clear()
-        interestingtable.loading = True
         interestingac = [ac for ac in self.watcher.seen.values() if ac.is_interesting or ac.is_helicopter]
         sortedac = sorted(interestingac, key=lambda ac: (ac.lastSeen, -ac.closestApproach), reverse=True)
-        for ac in sortedac:
-            closest = f"{ac.closestApproach:.2f}" if ac.closestApproach is not None else "N/A"
-            first_seen = ac.firstSeen.strftime("%Y-%m-%d %H:%M:%S")
-            last_seen = ac.lastSeen.strftime("%Y-%m-%d %H:%M:%S")
-            color: str = "white"
-            interestingdesc = self.watcher.get_interesting(ac.hex)
-            if ac.is_interesting and ac.is_helicopter:
-                color = "red"
-            elif ac.is_interesting:
-                color = "yellow"
-            elif ac.is_helicopter:
-                color = "blue"
+        self.update_aircraft_table(interestingtable, sortedac)
 
-            interestingtable.add_row(f'[{color}]{ac.hex}[/{color}]', f'[{color}]{ac.type}[/{color}]', f'[{color}]{ac.tail}[/{color}]', f'[{color}]{ac.flight}[/{color}]', f'[{color}]{closest}[/{color}]', f'[{color}]{first_seen}[/{color}]', f'[{color}]{last_seen}[/{color}]', f'[{color}]{ac.is_helicopter}[/{color}]', f'[{color}]{ac.is_interesting}[/{color}]', f'[{color}]{interestingdesc.get("$Operator")}[/{color}]', key=ac.hex)
 
-        interestingtable.loading = False    
+    def update_current(self) -> None:
+        currenttable = self.get_widget_by_id('current_table', expect_type=DataTable)
+        aircraft: List[SeenAircraft] = []
+        for ac in self.watcher.aircraft:
+            dist = ac.distance_to(lat=self.watcher.lat, lon=self.watcher.lon, unit="nm")
+            seenac = SeenAircraft(
+                hex=ac.hex,
+                type=ac.t,
+                typeDesc=ac.desc,
+                tail=ac.r,
+                flight=ac.flight,
+                closestApproach=dist if dist is not None else float('inf'),
+                firstSeen=self.watcher.last_refresh,
+                lastSeen=self.watcher.last_refresh,
+                is_helicopter=self.watcher.is_helicopter(ac.t),
+                is_interesting=self.watcher.is_interesting(ac.hex)
+            )
+            aircraft.append(seenac)
+        sortedac = sorted(aircraft, key=lambda ac: (ac.lastSeen, -ac.closestApproach), reverse=True)
+        self.update_aircraft_table(currenttable, sortedac)
+
+
 
     def refresh_data(self) -> None:
         self.watcher.refresh()
