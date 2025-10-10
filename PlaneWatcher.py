@@ -61,7 +61,10 @@ class PlaneWatcher:
                 firstSeen=self.last_refresh,
                 lastSeen=self.last_refresh,
                 is_helicopter=self.is_helicopter(ac.t),
-                is_interesting=self.is_interesting(ac.hex)
+                is_interesting=self.is_interesting(ac.hex),
+                groundSpeed=ac.gs,
+                altitude=ac.alt_geom if ac.alt_geom != "ground" else 0,
+                emergency=ac.emergency,
             )
             if ac.hex not in self.seen:
                 self.seen[ac.hex] = seenac
@@ -76,6 +79,9 @@ class PlaneWatcher:
                         self.seen[ac.hex].closestTime = self.last_refresh
                         self.seen[ac.hex].closestApproach = dist
                         self.seen[ac.hex].flight = ac.flight
+                        self.seen[ac.hex].groundSpeed=ac.gs if ac.gs is not None else float(0)
+                        self.seen[ac.hex].altitude=ac.alt_geom if ac.alt_geom != "ground" else float(0)
+                        self.seen[ac.hex].emergency=ac.emergency if ac.emergency is not None or ac.emergency != "False" else "False"
 
     def is_helicopter(self, type_str: str) -> bool:
         for item in self.__aircraft_types.aircraft_types:
@@ -90,7 +96,7 @@ class PlaneWatcher:
         helicopters = [
             ac
             for ac in self.aircraft
-            if ac.alt_baro != "ground" and self.is_helicopter(ac.t)
+            if self.is_helicopter(ac.t)
         ]
         for heli in helicopters:
             dist = heli.distance_to(lat=self.lat, lon=self.lon, unit="nm")
