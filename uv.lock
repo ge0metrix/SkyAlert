@@ -807,12 +807,12 @@ dependencies = [
     { name = "click" },
     { name = "httpx" },
     { name = "textual" },
-    { name = "textual-dev" },
 ]
 
 [package.dev-dependencies]
 dev = [
     { name = "pytest" },
+    { name = "textual-dev" },
 ]
 
 [package.metadata]
@@ -820,11 +820,13 @@ requires-dist = [
     { name = "click", specifier = ">=8.3.0" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "textual", specifier = ">=6.1.0" },
-    { name = "textual-dev", specifier = ">=1.7.0" },
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=8.4.2" }]
+dev = [
+    { name = "pytest", specifier = ">=8.4.2" },
+    { name = "textual-dev", specifier = ">=1.7.0" },
+]
 
 [[package]]
 name = "sniffio"
