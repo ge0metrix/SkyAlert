@@ -16,6 +16,10 @@ class SeenAircraft:
     lastSeen: datetime = datetime.now()
     is_helicopter: bool = False
     is_interesting: bool = False
-    groundSpeed: Optional[float] = 0
-    altitude: Optional[float] = 0
+    groundSpeed: float = 0
+    altitude: float = 0
     emergency: Optional[str] = "False"
+    highest_altitude: float = altitude
+    lowest_altitude: float = altitude
+    fastestGs: float = groundSpeed
+    slowestGs: float = groundSpeed

@@ -54,10 +54,14 @@ class SkyAlertApp(App):
             ("Last Seen", "Last Seen"),
             #("Helicopter", "Helicopter"),
             #("Interesting", "Interesting"),
-            ("Interesting Desc", "Interesting Desc"),
             ("Speed", "Speed"),
             ("Altitude", "Altitude"),
-            ("Emergency", "Emergency")
+            ("Highest Altitude", "Highest Altitude"),
+            ("Lowest Altitude", "Lowest Altitude"),
+            ("Fastest GS", "Fastest GS"),
+            ("Slowest GS", "Slowest GS"),
+            ("Interesting Desc", "Interesting Desc"),
+            #("Emergency", "Emergency")
         ]
 
         currenttable = self.get_widget_by_id("current_table", expect_type=DataTable)
@@ -74,10 +78,16 @@ class SkyAlertApp(App):
             ("Last Seen", "Last Seen"),
             #("Helicopter", "Helicopter"),
             #("Interesting", "Interesting"),
-            ("Interesting Desc", "Interesting Desc"),
             ("Speed", "Speed"),
             ("Altitude", "Altitude"),
-            ("Emergency", "Emergency")
+            ("Highest Altitude", "Highest Altitude"),
+            ("Lowest Altitude", "Lowest Altitude"),
+            ("Fastest GS", "Fastest GS"),
+            ("Slowest GS", "Slowest GS"),
+            ("Interesting Desc", "Interesting Desc"),
+
+            #("Emergency", "Emergency")
+
         ]
         interestingtable = self.get_widget_by_id(
             "interesting_table", expect_type=DataTable
@@ -116,6 +126,7 @@ class SkyAlertApp(App):
             elif ac.emergency and ac.emergency != "none":
                 color = "magenta"
             self.log.debug(f"{table.id}:\t Adding row for {ac.hex} to table {table.id}")
+            self.log.debug(f"{table.id}:\t {ac.highest_altitude}")
             rk = table.add_row(
                 f"[{color}]{ac.hex.upper()}[/{color}]",
                 f"[{color}]{ac.type}[/{color}]",
@@ -126,10 +137,16 @@ class SkyAlertApp(App):
                 f"[{color}]{last_seen}[/{color}]",
                 #f"[{color}]{ac.is_helicopter}[/{color}]",
                 #f"[{color}]{ac.is_interesting}[/{color}]",
-                f'[{color}]{interestingdesc.get("$Operator")}[/{color}]',
                 f"[{color}]{ac.groundSpeed} kt[/{color}]",
                 f"[{color}]{ac.altitude} ft[/{color}]",
-                f"[{color}]{ac.emergency}[/{color}]",
+                f"[{color}]{ac.highest_altitude} ft[/{color}]",
+                f"[{color}]{ac.lowest_altitude} ft[/{color}]",
+                f"[{color}]{ac.fastestGs} kt[/{color}]",
+                f"[{color}]{ac.slowestGs} kt[/{color}]",
+                f'[{color}]{interestingdesc.get("$Operator")}[/{color}]',
+                
+                #f"[{color}]{ac.emergency}[/{color}]",
+                
                 key=ac.hex,
             )
 
@@ -176,7 +193,7 @@ class SkyAlertApp(App):
                 is_helicopter=self.watcher.is_helicopter(ac.t),
                 is_interesting=self.watcher.is_interesting(ac.hex),
                 groundSpeed=ac.gs,
-                altitude=ac.alt_geom if ac.alt_geom != "none" else 0,
+                altitude=ac.alt_geom if ac.alt_geom else 0,
                 emergency=ac.emergency,
             )
             aircraft.append(seenac)

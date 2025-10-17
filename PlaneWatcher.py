@@ -62,9 +62,13 @@ class PlaneWatcher:
                 lastSeen=self.last_refresh,
                 is_helicopter=self.is_helicopter(ac.t),
                 is_interesting=self.is_interesting(ac.hex),
-                groundSpeed=ac.gs,
-                altitude=ac.alt_geom if ac.alt_geom != "ground" else 0,
+                groundSpeed=ac.gs if ac.gs is not None else 0,
+                altitude=ac.alt_geom if ac.alt_geom and ac.alt_geom != "ground" else 0,
                 emergency=ac.emergency,
+                highest_altitude=ac.alt_geom if ac.alt_geom and ac.alt_geom != "ground" else 0,
+                lowest_altitude=ac.alt_geom if ac.alt_geom and ac.alt_geom != "ground" else 0,
+                fastestGs=ac.gs if ac.gs is not None else 0,
+                slowestGs=ac.gs if ac.gs is not None else 0,
             )
             if ac.hex not in self.seen:
                 self.seen[ac.hex] = seenac
@@ -80,8 +84,12 @@ class PlaneWatcher:
                         self.seen[ac.hex].closestApproach = dist
                         self.seen[ac.hex].flight = ac.flight
                         self.seen[ac.hex].groundSpeed=ac.gs if ac.gs is not None else float(0)
-                        self.seen[ac.hex].altitude=ac.alt_geom if ac.alt_geom != "ground" else float(0)
+                        self.seen[ac.hex].altitude=ac.alt_geom if ac.alt_geom != "ground" and ac.alt_geom else float(0)
                         self.seen[ac.hex].emergency=ac.emergency if ac.emergency is not None or ac.emergency != "False" else "False"
+                        self.seen[ac.hex].highest_altitude = ac.alt_geom if ac.alt_geom and ac.alt_geom >= self.seen[ac.hex].highest_altitude else self.seen[ac.hex].highest_altitude
+                        self.seen[ac.hex].lowest_altitude = ac.alt_geom if ac.alt_geom and (self.seen[ac.hex].lowest_altitude == 0 or ac.alt_geom <= self.seen[ac.hex].lowest_altitude) else self.seen[ac.hex].lowest_altitude
+                        self.seen[ac.hex].fastestGs = ac.gs if ac.gs and ac.gs >= self.seen[ac.hex].fastestGs else self.seen[ac.hex].fastestGs
+                        self.seen[ac.hex].slowestGs = ac.gs if ac.gs and (self.seen[ac.hex].slowestGs == 0 or ac.gs <= self.seen[ac.hex].slowestGs) else self.seen[ac.hex].slowestGs
 
     def is_helicopter(self, type_str: str) -> bool:
         for item in self.__aircraft_types.aircraft_types:
